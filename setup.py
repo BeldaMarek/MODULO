@@ -66,6 +66,10 @@ setup(
         'tutorials': [
             "pyvista",
             "imageio",
+        ],
+        'vtk_utils': [
+            "vtk",
+            "pyvista",
         ]
     },
     license='BSD (3-clause)',
