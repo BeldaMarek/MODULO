@@ -465,7 +465,7 @@ def writeAll(mat,nameList,targetVTKList,source,nDim=1,prec=6,order='',planarData
         Provide aditional info about intermediate steps during execution. Default False.
         Gets passed to any called functions and overrides the default values there. 
     """
-
+    func_name = inspect.currentframe().f_code.co_name
     print("Splitting data and saving to vtk ...")
 
     # type checks
