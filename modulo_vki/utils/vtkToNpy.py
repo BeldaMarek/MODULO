@@ -36,6 +36,8 @@ import vtk
 import re
 import vtk.util.numpy_support as vtk_np
 import pyvista as pv
+import sys
+import inspect
 
 # ------------------- Function definitions -------------------
 
@@ -45,7 +47,7 @@ def licenseInfo():
     """
 
     print("\n===== LICENSE INFO ===========================================")
-    print("  %s  Copyright (C) 2025  Marek Belda \n  This program comes with ABSOLUTELY NO WARRANTY. \n  This is free software, and you are welcome \n  to redistribute it under certain conditions. \n  For details see https://www.gnu.org/licenses/gpl.html"%os.path.basename(__file__))
+    print("  %s  Copyright (C) 2025  Marek Belda et al. \n  This program comes with ABSOLUTELY NO WARRANTY. \n  This is free software, and you are welcome \n  to redistribute it under certain conditions. \n  For details see https://www.gnu.org/licenses/gpl.html"%os.path.basename(__file__))
     print("==============================================================\n")
     return
 
@@ -136,32 +138,22 @@ def readAll(dirPath,fieldName,sortBy='',ignoreDirs=[],fieldType='scalar',order='
     """
  
     print("Extracting %s field %s from vtk / vtu files ..."%(fieldType,fieldName))
-
+    func_name = inspect.currentframe().f_code.co_name
     # type checks
-    if not (isinstance(dirPath,str) and os.path.exists(dirPath)):
-        print("ERROR: Variable 'dirPath' is not of type 'str' or is not a valid path")
-        return
-    if not isinstance(fieldName,str):
-        print("ERROR: Variable 'fieldName' is not of type 'str'")
-        return
-    if not (isinstance(ignoreDirs,list) and all(isinstance(item, str) for item in ignoreDirs)):
-        print("ERROR: Variable 'ignoreDirs' is not a list or does not contain strings")
-        return  
-    if not isinstance(order,str):
-        print("ERROR: Variable 'order' is not of type 'str'")
-        return 
-    if not isinstance(saveMatrix,bool):
-        print("ERROR: Variable 'saveMatrix' is not of type 'bool'")
-        return
-    if not isinstance(savePath,str):
-        print("ERROR: Variable 'savePath' is not of type 'str'")
-        return
-    if not isinstance(verbose,bool):
-        print("ERROR: Variable 'verbose' is not of type 'bool'")
-        return
-    if not isinstance(skipFilePrint,int):
-        print("ERROR: Variable 'skipFilePrint' is not of type 'int'")
-        return
+    try:
+        assert (isinstance(dirPath,str) and os.path.exists(dirPath)), "Variable 'dirPath' is not string or is not a valid path"
+        assert isinstance(fieldName,str), "Variable 'fieldName' must be a string"
+        assert (isinstance(ignoreDirs,list) and all(isinstance(item, str) for item in ignoreDirs)), "Variable 'ignoreDirs' must be a list of strings"
+        assert isinstance(order,str), "Variable 'order' must be a 1 character string"
+        assert isinstance(saveMatrix,bool), "Variable 'saveMatrix' must be of type 'bool'"
+        assert isinstance(savePath,str), "Variable 'savePath' must be a string"
+        assert isinstance(verbose,bool), "Variable 'verbose' must be of type 'bool'"
+        assert isinstance(skipFilePrint,int), "Variable 'skipFilePrint' must be of type 'int' and >=1"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        # Exit the program immediately
+        sys.exit(1)
 
     # File reporting    
     if skipFilePrint == 1:
@@ -173,7 +165,7 @@ def readAll(dirPath,fieldName,sortBy='',ignoreDirs=[],fieldType='scalar',order='
     elif skipFilePrint > 3:
         print("Reporting every %dth file"%skipFilePrint)
     else:
-        print("WARNING: Invalid skipFilePrint option specified, reverting to default")
+        print(f"WARNING IN {func_name}: Invalid skipFilePrint option specified, reverting to default")
         skipFilePrint=1
 
 
@@ -204,7 +196,7 @@ def readAll(dirPath,fieldName,sortBy='',ignoreDirs=[],fieldType='scalar',order='
             if verbose:
                 print(" -> Done.")
         else:
-            print("WARNING: Invalid sorting spec, proceeding without sorting")
+            print(f"WARNING IN {func_name}: Invalid sorting spec, proceeding without sorting")
 
         # Reading all files
         for file in fileList:
@@ -220,8 +212,8 @@ def readAll(dirPath,fieldName,sortBy='',ignoreDirs=[],fieldType='scalar',order='
                     # Setting up reader able to read *.vtu files (change reader if necessary)
                     reader = vtk.vtkXMLUnstructuredGridReader()
                 else:
-                    print("ERROR: Unsupported file extension")
-                    return
+                    print(f"ERROR IN {func_name}: Unsupported file extension")
+                    sys.exit(1)
 
                 # Data extraction
                 reader.SetFileName(fileToRead)
@@ -231,7 +223,7 @@ def readAll(dirPath,fieldName,sortBy='',ignoreDirs=[],fieldType='scalar',order='
                     var = data.GetCellData().GetArray(fieldName)
                     var = vtk_np.vtk_to_numpy(var)
                 except:
-                    print("WARNING: Array of this name does not exist in this file, skipping to next file")
+                    print(f"WARNING IN {func_name}: Array of this name does not exist in this file, skipping to next file")
                     continue
                 
                 if fieldType == 'vector':
@@ -255,8 +247,8 @@ def readAll(dirPath,fieldName,sortBy='',ignoreDirs=[],fieldType='scalar',order='
                         out = np.append(out, var.reshape(-1, 1), axis=1)
 
                 else:
-                    print("ERROR: Unsupported field type")
-                    return
+                    print(f"ERROR IN {func_name}: Unsupported field type")
+                    sys.exit(1)
 
                 i += 1
     
@@ -319,26 +311,21 @@ def readOneVtk(filePath,fieldName,fieldType='scalar',order='',saveMatrix=False,s
     """
 
     print("Extracting %s field %s from %s ..."%(fieldType,fieldName,filePath))
-
+    func_name = inspect.currentframe().f_code.co_name
     # type checks
-    if not (isinstance(filePath,str) and os.path.exists(filePath)):
-        print("ERROR: Variable 'filePath' is not of type 'str' or is not a valid path")
-        return
-    if not isinstance(fieldName,str):
-        print("ERROR: Variable 'fieldName' is not of type 'str'")
-        return 
-    if not isinstance(order,str):
-        print("ERROR: Variable 'order' is not of type 'str'")
-        return 
-    if not isinstance(saveMatrix,bool):
-        print("ERROR: Variable 'saveMatrix' is not of type 'bool'")
-        return
-    if not isinstance(savePath,str):
-        print("ERROR: Variable 'savePath' is not of type 'str'")
-        return
-    if not isinstance(verbose,bool):
-        print("ERROR: Variable 'verbose' is not of type 'bool'")
-        return
+    try:
+        assert (isinstance(filePath,str) and os.path.exists(filePath)), "Variable 'filePath' is not string or is not a valid path"
+        assert isinstance(fieldName,str), "Variable 'fieldName' must be a string"
+        assert isinstance(order,str), "Variable 'order' must be a 1 character string"
+        assert isinstance(saveMatrix,bool), "Variable 'saveMatrix' must be of type 'bool'"
+        assert isinstance(savePath,str), "Variable 'savePath' must be a string"
+        assert isinstance(verbose,bool), "Variable 'verbose' must be of type 'bool'"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        # Exit the program immediately
+        sys.exit(1)
+
 
     if filePath.endswith('.vtk'):
         # Setting up reader able to read *.vtk files (change reader if necessary)
@@ -347,8 +334,8 @@ def readOneVtk(filePath,fieldName,fieldType='scalar',order='',saveMatrix=False,s
         # Setting up reader able to read *.vtu files (change reader if necessary)
         reader = vtk.vtkXMLUnstructuredGridReader()
     else:
-        print("ERROR: Unsupported file extension")
-        return
+        print(f"ERROR IN {func_name}: Unsupported file extension")
+        sys.exit(1)
 
     # Data extraction
     reader.SetFileName(filePath)
@@ -358,8 +345,8 @@ def readOneVtk(filePath,fieldName,fieldType='scalar',order='',saveMatrix=False,s
         var = data.GetCellData().GetArray(fieldName)
         var = vtk_np.vtk_to_numpy(var)
     except:
-        print("ERROR: Array of this name does not exist in this file")
-        return
+        print(f"ERROR IN {func_name}: Unsupported file extension")
+        sys.exit(1)
 
     if fieldType == 'vector':
         vectorDim = 3
@@ -375,8 +362,8 @@ def readOneVtk(filePath,fieldName,fieldType='scalar',order='',saveMatrix=False,s
         out[:,0] = var
 
     else:
-        print("ERROR: Unsupported field type")
-        return
+        print(f"ERROR IN {func_name}: Unsupported field type")
+        sys.exit(1)
     
     # Save matrix
     if saveMatrix:
@@ -422,34 +409,38 @@ def getCellVolumes(fileName,threshold=1e-24):
     """
 
     print("Computing cell volumes in %s ..."%fileName)
-
+    func_name = inspect.currentframe().f_code.co_name
     # type checks
-    if not (isinstance(fileName,str) and os.path.exists(fileName)):
-        print("ERROR: Variable 'fileName' is not of type 'str' or is not a valid path")
-        return
+    try:
+        assert (isinstance(fileName,str) and os.path.exists(fileName)), "Variable 'fileName' is not string or is not a valid path"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        # Exit the program immediately
+        sys.exit(1)
 
     # Read the VTK file (supports .vtk, .vtu, .vtp, etc.)
     mesh = pv.read(fileName)
 
     if mesh.n_cells == 0:
-        print("ERROR: No cells found in the mesh")
-        return
+        print(f"ERROR IN {func_name}: No cells found in the mesh")
+        sys.exit(1)
 
     # Compute cell volumes
     vol = np.array(mesh.compute_cell_sizes(length=False, area=False, volume=True)["Volume"])
     # Check dimensions
     if vol.size != mesh.n_cells:
-        print("ERROR: No of cell volumes does not correspond to the no of cells")
-        return
+        print(f"ERROR IN {func_name}: No of cell volumes does not correspond to the no of cells")
+        sys.exit(1)
     # Check for negative volumes
     if np.any(vol < 0):
-        print("WARNING: Negative volumes encountered, mesh may be invalid or have incorrect point ordering")
+        print(f"WARNING IN {func_name}: Negative volumes encountered, mesh may be invalid or have incorrect point ordering")
         print(" -> Trying to bypass the issue by returning absolute values of cell volumes")
         print(" -> User discretion necessary, use provided values with caution")
         vol = np.abs(vol)
     # Check for zero volumes
     if np.any(vol < threshold):
-        print("WARNING: One or more zero-volume cells in the mesh, mesh may be invalid")
+        print(f"WARNING IN {func_name}: One or more zero-volume cells in the mesh, mesh may be invalid")
 
     print("Done.")
     return vol

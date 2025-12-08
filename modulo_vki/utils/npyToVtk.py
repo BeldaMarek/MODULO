@@ -34,6 +34,7 @@ import numpy as np
 import os
 import vtk
 from vtk.util import numpy_support
+import inspect
 
 
 # ------------------- Function definitions -------------------
@@ -44,7 +45,7 @@ def licenseInfo():
     """
 
     print("\n===== LICENSE INFO ===========================================")
-    print("  %s  Copyright (C) 2025  Marek Belda \n  This program comes with ABSOLUTELY NO WARRANTY. \n  This is free software, and you are welcome \n  to redistribute it under certain conditions. \n  For details see https://www.gnu.org/licenses/gpl.html"%os.path.basename(__file__))
+    print("  %s  Copyright (C) 2025  Marek Belda et al. \n  This program comes with ABSOLUTELY NO WARRANTY. \n  This is free software, and you are welcome \n  to redistribute it under certain conditions. \n  For details see https://www.gnu.org/licenses/gpl.html"%os.path.basename(__file__))
     print("==============================================================\n")
     return
 
@@ -102,23 +103,26 @@ def prepDataForVtk(data,nDim=1,prec=6,order='',planarData=0,verbose=True):
         Output variable of appropriate size. Contains 'data' reshaped to fit 'writeVtk' and 'appendArrToVtk' functions.
     """
 
+    func_name = inspect.currentframe().f_code.co_name
     if verbose:
         print("Reshaping data for writing vtk ...")
     # type checks
-    if not isinstance(nDim,int):
-        print("ERROR: Variable 'nDim' is not of type 'int'")
+    try:
+        assert isinstance(nDim,int), "Variable 'nDim' must be integer"
+        assert isinstance(prec,int), "Variable 'prec' must be integer"
+        assert isinstance(order,str), "Variable 'order' must be a 1 character string"
+        assert planarData in [0,1,2,3], "Incorrectly specified 'planarData', must be from [0, 1, 2, 3]. See description for details."
+        assert isinstance(verbose,bool), "Variable 'verbose' must be of type 'bool'"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        print(f"ERROR IN {func_name}: No data prepaired, returning blank")
+        # Exit the program immediately
         return
-    if not isinstance(prec,int):
-        print("ERROR: Variable 'prec' is not of type 'int'")
-        return
-    if not isinstance(order,str):
-        print("ERROR: Variable 'order' is not of type 'str'")
-        return    
-    if not isinstance(verbose,bool):
-        print("ERROR: Variable 'verbose' is not of type 'bool'")
-        return
+
     if data.shape[0] % nDim != 0:
-        print("ERROR: Inconsistent data dimension")
+        print(f"ERROR IN {func_name}: Inconsistent data dimension")
+        print(f"ERROR IN {func_name}: No data prepaired, returning blank")
         return
 
     length = int(data.shape[0]/nDim)
@@ -144,7 +148,8 @@ def prepDataForVtk(data,nDim=1,prec=6,order='',planarData=0,verbose=True):
             for k in range(nDim):
                 Uwr[:,k] = np.round(data[k*length:(k+1)*length],prec)
         else:
-            print("ERROR: Invalid ordering specified")
+            print(f"ERROR IN {func_name}: Invalid ordering specified")
+            print(f"ERROR IN {func_name}: No data prepaired, returning blank")
             return
 
         if verbose:
@@ -166,13 +171,15 @@ def prepDataForVtk(data,nDim=1,prec=6,order='',planarData=0,verbose=True):
             for k in range(nDim):
                 Uwr[:,k] = np.round(data[k*length:(k+1)*length],prec)
         else:
-            print("ERROR: Invalid ordering specified")
+            print(f"ERROR IN {func_name}: Invalid ordering specified")
+            print(f"ERROR IN {func_name}: No data prepaired, returning blank")
             return
         if verbose:
             print(" -> Done.")
 
     else:
-        print("ERROR: Invalid dimension, or wrongly specified data plane normal for 2D data")
+        print(f"ERROR IN {func_name}: Invalid dimension, or wrongly specified data plane normal for 2D data")
+        print(f"ERROR IN {func_name}: No data prepaired, returning blank")
         return
     if verbose:
         print("Done.")
@@ -204,21 +211,21 @@ def writeVtk(source, targetVTK, whatToWrite, varName, verbose=True):
     verbose : bool, optional
         Provide aditional info about intermediate steps during execution. Default True.
     """
-
+    func_name = inspect.currentframe().f_code.co_name
     # type checks
-    if not isinstance(source,str):
-        print("ERROR: Variable 'source' is not of type 'str'")
-        return
-    if not isinstance(targetVTK,str):
-        print("ERROR: Variable 'targetVTK' is not of type 'str'")
-        return
-    if not isinstance(varName,str):
-        print("ERROR: Variable 'varName' is not of type 'str'")
-        return    
-    if not isinstance(verbose,bool):
-        print("ERROR: Variable 'verbose' is not of type 'bool'")
+    try:
+        assert isinstance(source,str), "Variable 'source' must be a string"
+        assert isinstance(targetVTK,str), "Variable 'targetVTK' must be a string"
+        assert isinstance(varName,str), "Variable 'varName' must be a string"
+        assert isinstance(verbose,bool), "Variable 'verbose' must be of type 'bool'"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        print(f"ERROR IN {func_name}: No vtk files written")
+        # Exit the program immediately
         return
 
+    
     if verbose:
         print('Writing %s ...'%targetVTK)
 
@@ -244,7 +251,8 @@ def writeVtk(source, targetVTK, whatToWrite, varName, verbose=True):
         # Setting up reader able to read *.vtu files (change reader if necessary)
         reader = vtk.vtkXMLUnstructuredGridReader()
     else:
-        print("ERROR: Unsupported file extension")
+        print(f"ERROR IN {func_name}: Unsupported source file extension")
+        print(f"ERROR IN {func_name}: No vtk files written")
         return
 
     reader.SetFileName(source)
@@ -255,7 +263,8 @@ def writeVtk(source, targetVTK, whatToWrite, varName, verbose=True):
     noOfCells = data.GetNumberOfCells()
     cellType = data.GetCellType(0)
     if noOfCells != nDataPoints:
-        print("ERROR: Trying to write %d field entries into %d cells"%(nDataPoints,noOfCells))
+        print(f"ERROR IN {func_name}: Trying to write {nDataPoints} field entries into {noOfCells} cells")
+        print(f"ERROR IN {func_name}: No vtk files written")
         return
 
     # Add cell field
@@ -270,7 +279,8 @@ def writeVtk(source, targetVTK, whatToWrite, varName, verbose=True):
     elif nDim == 1: 
         data.GetCellData().SetScalars(vector_field)
     else:
-        print("ERROR: Invalid dimension of data, fits neither vector nor scalar fields")
+        print(f"ERROR IN {func_name}: Invalid dimension of data, fits neither vector nor scalar fields")
+        print(f"ERROR IN {func_name}: No vtk files written")
         return
     if verbose:
         print(" -> Done.")
@@ -292,9 +302,9 @@ def writeVtk(source, targetVTK, whatToWrite, varName, verbose=True):
     data = reader.GetOutput()
 
     if data.GetNumberOfCells() != noOfCells:
-        print(" -> WARNING: Different no of cells in original and output file, output file may be corrupted")
+        print(f" -> WARNING IN {func_name}: Different no of cells in original and output file, output file may be corrupted")
     if data.GetCellType(0) != cellType:
-        print(" -> WARNING: Different cell type in original and output file, output file may be corrupted")
+        print(f" -> WARNING IN {func_name}: Different cell type in original and output file, output file may be corrupted")
     
     # Check for invalid cells
     for i in range(data.GetNumberOfCells()):
@@ -330,19 +340,21 @@ def appendArrToVtk(source, whatToWrite, varName, verbose=True):
         Provide aditional info about intermediate steps during execution. Default True.
     """
 
+    func_name = inspect.currentframe().f_code.co_name
+    # type checks
+    try:
+        assert isinstance(source,str), "Variable 'source' must be a string"
+        assert isinstance(varName,str), "Variable 'varName' must be a string"
+        assert isinstance(verbose,bool), "Variable 'verbose' must be of type 'bool'"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        print(f"ERROR IN {func_name}: No vtk files written")
+        # Exit the program immediately
+        return
+
     if verbose:
         print('Appending data to %s ...'%source)
-
-    # type checks
-    if not isinstance(source,str):
-        print("ERROR: Variable 'source' is not of type 'str'")
-        return
-    if not isinstance(varName,str):
-        print("ERROR: Variable 'varName' is not of type 'str'")
-        return    
-    if not isinstance(verbose,bool):
-        print("ERROR: Variable 'verbose' is not of type 'bool'")
-        return
 
     nDataPoints = whatToWrite.shape[0]
     nDim = whatToWrite.shape[1]
@@ -353,14 +365,16 @@ def appendArrToVtk(source, whatToWrite, varName, verbose=True):
         reader.Update()
         data = reader.GetOutput()
     else:
-        print("ERROR: Unsupported format")
+        print(f"ERROR IN {func_name}: Unsupported file extension")
+        print(f"ERROR IN {func_name}: No vtk files written")
         return
 
     # Check data dimension against no of cells
     noOfCells = data.GetNumberOfCells()
     cellType = data.GetCellType(0)
     if noOfCells != nDataPoints:
-        print("ERROR: Trying to write %d field entries into %d cells"%(nDataPoints,noOfCells))
+        print(f"ERROR IN {func_name}: Trying to write {nDataPoints} field entries into {noOfCells} cells")
+        print(f"ERROR IN {func_name}: No vtk files written")
         return
 
     # Add cell field
@@ -391,15 +405,15 @@ def appendArrToVtk(source, whatToWrite, varName, verbose=True):
     data = reader.GetOutput()
 
     if data.GetNumberOfCells() != noOfCells:
-        print(" -> WARNING: Different no of cells in original and output file, output file may be corrupted")
+        print(f" -> WARNING IN {func_name}: Different no of cells in original and output file, output file may be corrupted")
     if data.GetCellType(0) != cellType:
-        print(" -> WARNING: Different cell type in original and output file, output file may be corrupted")
+        print(f" -> WARNING IN {func_name}: Different cell type in original and output file, output file may be corrupted")
     
     # Check for invalid cells
     for i in range(data.GetNumberOfCells()):
         cell = data.GetCell(i)
         if cell is None or cell.GetNumberOfPoints() == 0:
-            print(f" -> WARNING: Missing or invalid cell at index {i}")
+            print(f" -> WARNING IN {func_name}: Missing or invalid cell at index {i}")
 
     if verbose:
         print(" -> Done.")
@@ -455,22 +469,24 @@ def writeAll(mat,nameList,targetVTKList,source,nDim=1,prec=6,order='',planarData
     print("Splitting data and saving to vtk ...")
 
     # type checks
-    if not isinstance(nameList,list):
-        print("ERROR: Variable 'nameList' is not a list")
+    try:
+        assert isinstance(nameList,list), "Variable 'nameList' must be a list"
+        assert isinstance(targetVTKList,list), "Variable 'targetVTKList' must be a list"
+        assert isinstance(saveAsOneFile,bool), "Variable 'saveAsOneFile' must be of type 'bool'"
+        assert isinstance(verbose,bool), "Variable 'verbose' must be of type 'bool'"
+    except AssertionError as e:
+        # Print the error message
+        print(f"ERROR IN {func_name}: {e}")
+        print(f"ERROR IN {func_name}: No vtk files written")
+        # Exit the program immediately
         return
-    if not isinstance(targetVTKList,list):
-        print("ERROR: Variable 'targetVTKList' is not a list")
-        return
-    if not isinstance(saveAsOneFile,bool):
-        print("ERROR: Variable 'saveAsOneFile' is not of type 'bool'")
-        return    
-
 
     noOfFiles = mat.shape[1]
 
     if not saveAsOneFile:
         if not (len(nameList) == noOfFiles and len(targetVTKList) == noOfFiles):    # Check no of entries
-            print("ERROR: No of entries in 'nameList' or 'targetVTKList' does not match no of files to be saved.")
+            print(f"ERROR IN {func_name}: Number of entries in 'nameList' or 'targetVTKList' does not match number of files to be saved.")
+            print(f"ERROR IN {func_name}: No vtk files written")
             return 
         
         for k in range(noOfFiles):      # Write each column of 'mat' into its own file
@@ -480,7 +496,8 @@ def writeAll(mat,nameList,targetVTKList,source,nDim=1,prec=6,order='',planarData
 
     else:
         if not (len(nameList) == noOfFiles and len(targetVTKList) == 1):    # Check no of entries
-            print("ERROR: No of entries in 'nameList' does not match no of arrays to be saved or 'targetVTKList' does not have one entry")
+            print(f"ERROR IN {func_name}: Number of entries in 'nameList' does not match no of arrays to be saved or 'targetVTKList' does not have one entry.")
+            print(f"ERROR IN {func_name}: No vtk files written")
             return 
 
         for k in range(noOfFiles):      # Write each column of 'mat' into its own array
