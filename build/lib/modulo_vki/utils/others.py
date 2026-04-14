@@ -23,8 +23,8 @@ def Plot_Field_TEXT_JET(File):
     nxny = Dat.shape[0]  # is the to be doubled at the end we will have n_s=2 * n_x * n_y
     n_s = 2 * nxny
     ## 1. Reconstruct Mesh from file
-    X_S = Dat[:, 0];
-    Y_S = Dat[:, 1];
+    X_S = Dat[:, 0]
+    Y_S = Dat[:, 1]
     # Reshape also the velocity components
     V_X = Dat[:, 2]  # U component
     V_Y = Dat[:, 3]  # V component
@@ -53,7 +53,7 @@ def Plot_Field_TEXT_JET(File):
     ax.set_xlim([0, 35])
     ax.set_ylim(10, 29)
     ax.invert_yaxis()  # Invert Axis for plotting purpose
-    plt.show()
+    # plt.show()
     Name[len(Name) - 12:len(Name)] + ' Plotted'
     return n_s, Xg, Yg, Vxg, -Vyg, X_S, Y_S
 
@@ -194,14 +194,14 @@ def Animation_JET(Giff_NAME,D,X_S,Y_S,In,Fin,Step):
 
 
 
-def Plot_2D_CFD_Cyl(Xg,Yg,U,V,k=10,CL=16,Name=''):
+def Plot_2D_CFD_Cyl(Xg,Yg,U,V,k=10,CL=16,Name='', verbose=False):
     # Make a 2D plot of the 2D cylinder test case in Openfoam.
     n_x,n_y=np.shape(Xg)
     U_g=U[:,k].reshape(n_y,n_x).T
     V_g=V[:,k].reshape(n_y,n_x).T
     # Prepare the plot        
     fig, ax = plt.subplots(figsize=(6, 3)) # This creates the figure
-    plt.contourf(Xg,Yg,np.sqrt(U_g**2+V_g**2),30)
+    contour = plt.contourf(Xg,Yg,np.sqrt(U_g**2+V_g**2),30)
     # plt.quiver(Xg,Yg,U_g,V_g,scale=10000)
     ax.set_aspect('equal') # Set equal aspect ratio
     ax.set_xlabel('$x[mm]$',fontsize=13)
@@ -222,12 +222,14 @@ def Plot_2D_CFD_Cyl(Xg,Yg,U,V,k=10,CL=16,Name=''):
     if len(Name) !=0:
         plt.savefig(Name, dpi=200)
         plt.close(fig)
-        print('Image exported')
+        
+        if verbose:
+            print('Image exported')
     
     return 
 
 
-def Animation_2D_CFD_Cyl(Giff_NAME,D,Xg,Yg,In,Fin,Step):
+def Animation_2D_CFD_Cyl(Giff_NAME,D,Xg,Yg,In,Fin,Step,verbose=False):
     """
     The gif file is created from the provided data snapshot
     """
@@ -241,17 +243,22 @@ def Animation_2D_CFD_Cyl(Giff_NAME,D,Xg,Yg,In,Fin,Step):
     Fol_Out = 'Gif_Images_temporary'
     if not os.path.exists(Fol_Out):
         os.mkdir(Fol_Out)
-    # Loop to produce the Gifs    
+    # Loop to produce the Gifs
+    if not verbose:
+        print('Exporting images...')
     for k in range(1,n_t,Step):
      NameOUT = Fol_Out + os.sep + 'Im%03d' % (k) + '.png'
-     Plot_2D_CFD_Cyl(Xg,Yg,U,V,k=k+In,CL=16,Name=NameOUT)
+     Plot_2D_CFD_Cyl(Xg,Yg,U,V,k=k+In,CL=16,Name=NameOUT,verbose=verbose)
 
     import imageio  # This used for the animation
     images = []
 
+    if not verbose:
+        print('Preparing images...')
     for k in range(1,n_t,Step):
-        MEX = 'Preparing Im ' + str(k)
-        print(MEX)
+        if verbose:
+            MEX = 'Preparing Im ' + str(k)
+            print(MEX)
         NameOUT = Fol_Out + os.sep + 'Im%03d' % (k) + '.png'
         images.append(imageio.imread(NameOUT))
 
@@ -264,7 +271,7 @@ def Animation_2D_CFD_Cyl(Giff_NAME,D,Xg,Yg,In,Fin,Step):
 
 
 
-def Plot_Field_TEXT_Cylinder(File,Name_Mesh,Name_FIG):  
+def Plot_Field_TEXT_Cylinder(File,Name_Mesh,Name_FIG, show=False):  
    """
    This function plots the vector field from the TR-PIV in Exercise 4.
       
@@ -312,8 +319,12 @@ def Plot_Field_TEXT_Cylinder(File,Name_Mesh,Name_FIG):
    circle = plt.Circle((0,0),2.5,fill=True,color='r',edgecolor='k',alpha=0.5)
    plt.gcf().gca().add_artist(circle)
    plt.tight_layout()   
-   plt.savefig(Name_FIG, dpi=200) 
-   plt.show()
+   plt.savefig(Name_FIG, dpi=200)
+   
+   if show: 
+    plt.show()
+   
+   plt.close()
    print(Name_FIG+' printed')
    return n_s, Xg, Yg, Vxg, Vyg, X_S, Y_S
 
@@ -416,34 +427,35 @@ def Plot_Scalar_Field_Cylinder(X_S,Y_S,V_X,V_Y,Scalar,PLOT,Step,Scale):
 
 
 def plot_grid_cylinder_flow(Xg,Yg,Vxg,Vyg):
- STEPx=1;  STEPy=1
- # This creates the figure
- fig, ax = plt.subplots(figsize=(6, 3)) 
- Magn=np.sqrt(Vxg**2+Vyg**2)
- # Plot Contour
- #CL=plt.contourf(Xg,Yg,Magn,levels=np.linspace(0,np.max(Magn),5))
- CL=plt.contourf(Xg,Yg,Magn,20,cmap='viridis',alpha=0.95)
- # One possibility is to use quiver
- STEPx=1;  STEPy=1
- plt.quiver(Xg[::STEPx,::STEPy],Yg[::STEPx,::STEPy],\
+    STEPx=1;  STEPy=1
+    # This creates the figure
+    fig, ax = plt.subplots(figsize=(6, 3)) 
+    Magn=np.sqrt(Vxg**2+Vyg**2)
+    # Plot Contour
+    #CL=plt.contourf(Xg,Yg,Magn,levels=np.linspace(0,np.max(Magn),5))
+    CL=plt.contourf(Xg,Yg,Magn,20,cmap='viridis',alpha=0.95)
+    # One possibility is to use quiver
+    STEPx=1;  STEPy=1
+    plt.quiver(Xg[::STEPx,::STEPy],Yg[::STEPx,::STEPy],\
             Vxg[::STEPx,::STEPy],Vyg[::STEPx,::STEPy],color='k')
- plt.rc('text', usetex=True)      
- plt.rc('font', family='serif')
- plt.rc('xtick',labelsize=12)
- plt.rc('ytick',labelsize=12)
- #fig.colorbar(CL,pad=0.05,fraction=0.025)
- ax.set_aspect('equal') # Set equal aspect ratio
- ax.set_xlabel('$x[mm]$',fontsize=13)
- ax.set_ylabel('$y[mm]$',fontsize=13)
- #ax.set_title('Tutorial 2: Cylinder Wake',fontsize=12)
- ax.set_xticks(np.arange(0,70,10))
- ax.set_yticks(np.arange(-10,11,10))
- ax.set_xlim([0,50])
- ax.set_ylim(-10,10)
- circle = plt.Circle((0,0),2.5,fill=True,color='r',edgecolor='k',alpha=0.5)
- plt.gcf().gca().add_artist(circle)
- plt.tight_layout()
- plt.show()
+    plt.rc('text', usetex=True)      
+    plt.rc('font', family='serif')
+    plt.rc('xtick',labelsize=12)
+    plt.rc('ytick',labelsize=12)
+    #fig.colorbar(CL,pad=0.05,fraction=0.025)
+    ax.set_aspect('equal') # Set equal aspect ratio
+    ax.set_xlabel('$x[mm]$',fontsize=13)
+    ax.set_ylabel('$y[mm]$',fontsize=13)
+    #ax.set_title('Tutorial 2: Cylinder Wake',fontsize=12)
+    ax.set_xticks(np.arange(0,70,10))
+    ax.set_yticks(np.arange(-10,11,10))
+    ax.set_xlim([0,50])
+    ax.set_ylim(-10,10)
+    circle = plt.Circle((0,0),2.5,fill=True,color='r',edgecolor='k',alpha=0.5)
+    plt.gcf().gca().add_artist(circle)
+    plt.tight_layout()
+    
+    return fig, ax
 
 
 

@@ -1,6 +1,8 @@
+import os
 from os import path
 from setuptools import setup, find_packages
 import sys
+#from numpy.distutils.core import Extension
 
 # NOTE: This file must remain Python 2 compatible for the foreseeable future,
 # to ensure that we error out properly for people with outdated setuptools
@@ -24,16 +26,16 @@ here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README_pypi.rst'), encoding='utf-8') as readme_file:
     readme = readme_file.read()
-    
+
 
 setup(
     name='modulo_vki',
-    version='2.1.4',
+    version='3.0.0',
     description="MODULO (MODal mULtiscale pOd) is a software developed at the von Karman Institute to perform "
                 "Multiscale Modal Analysis of numerical and experimental data.",
     long_description=readme,
     long_description_content_type='text/x-rst',
-    author=["R. Poletti","L. Schena", "D. Ninni", "M. A. Mendez"],
+    author=["R. Poletti","L. Schena", "D. Ninni", "M. A. Mendez", "M. Belda"],
     author_email='mendez@vki.ac.be',
     url='https://github.com/mendezVKI/MODULO/tree/master/modulo_python_package/',
     python_requires='>={}'.format('.'.join(str(n) for n in min_version)),
@@ -61,6 +63,7 @@ setup(
         "ipython-genutils",
         "ipywidgets",
         "matplotlib",
+        "randomized_svd"
     ],
     extra_requires={
         'tutorials': [
