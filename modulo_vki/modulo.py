@@ -440,6 +440,8 @@ class ModuloVKI:
     def fastmPOD(self, F_V, fs, Keep = None, winType = "hann", taper = None, mode = "fullK", GThresh = -1, ncpus = os.cpu_count(), oversampling = 10, n_iter = -1, useFortran = False):
 
         """
+        Fast spectral variant of Multi-Scale Proper Orthogonal Decomposition (mPOD) of a signal.
+
         Parameters
         ----------
         F_V : list of float in ascending order, >0 and <f_Nyq
@@ -590,7 +592,8 @@ class ModuloVKI:
         taperWid = np.round(taper*Nt/fs).astype(int)  # Convert tapering width from Hz to number of frequency bins
 
         # Sort scales by decreasing energy
-        scaleOrder, E, f, indTot, noOfKept = sortScalesByEnergy(F_V, Keep, freq, mode, K_F if mode == "fullK" else D_hat)
+        scaleOrder, E, f, indTot, scalesToKeep = sortScalesByEnergy(F_V, Keep, freq, mode, K_F if mode == "fullK" else D_hat)
+        noOfScales = Keep.size
         Etot = 0.01*np.sum(E)   # Prepare energy to print scale E content in %
 
         # Initialize Lambda and Psi matrices as None
@@ -603,7 +606,7 @@ class ModuloVKI:
         lamMin = 0
         for k in scaleOrder:
 
-            print("Processing band %d/%d (%.1f Hz - %.1f Hz), %.1f %% of resolved energy in %d bins ..."%(k+1,noOfKept,f[k,0],f[k,1],E[k]/Etot,indTot[k].size))
+            print("Processing band %d/%d (%.1f Hz - %.1f Hz), %.1f %% of resolved energy in %d bins ..."%(scalesToKeep[k]+1,noOfScales,f[k,0],f[k,1],E[k]/Etot,indTot[k].size))
 
             """
             NOTE:
@@ -632,9 +635,9 @@ class ModuloVKI:
             indices = indTot[k]
 
             # Optional tapering
-            if taperWid[k] > 0:
-                print(" -> Computing smoothing mask")
-                mask1D = taperBlockBounds(indices, winType=winType, taperSize=taperWid[k], Nt=Nt, fBounds=f[k,:], fs=fs)
+            if taperWid[scalesToKeep[k]] > 0:
+                print(" -> Computing smoothing mask of width %d bins"%(taperWid[scalesToKeep[k]]))
+                mask1D = taperBlockBounds(indices, winType=winType, taperSize=taperWid[scalesToKeep[k]], Nt=Nt, fBounds=f[k,:], fs=fs)
 
             # number of frequencies in the current scale
             N = indices.size
@@ -649,7 +652,7 @@ class ModuloVKI:
                     print(" -> Computing K_Fsc on the fly")
                     # Assemble K_Fsc in place
                     if useFortran:
-                        import symMatmulRoutines as sm  # Import Fortran routines for per-band assembly of K_Fsc.
+                        import modulo_vki.fortran.symMatmulRoutines as sm  # Import Fortran routines for per-band assembly of K_Fsc.
                         if f[k,0] == 0:
                             K_Fsc = sm.sym_routines.compute_persym_aha_dc(np.asfortranarray(D_hat[:,indices].copy()), D_hat.shape[0], N)
                         elif f[k,1] == fs/2 and Nt%2 == 0:
@@ -660,7 +663,7 @@ class ModuloVKI:
                         K_Fsc = np.linalg.matmul(D_hat[:,indices].conj().T, D_hat[:,indices])   # O(Ns*N**2), but with complex-valued matrix
 
 
-                if taperWid[k] > 0:
+                if taperWid[scalesToKeep[k]] > 0:
                     print(" -> Applying smoothing to K_Fsc")
                     K_Fsc = K_Fsc * np.outer(mask1D,mask1D)    # Apply smoothing mask to K_Fsc -- O(N**2)
 
@@ -712,10 +715,11 @@ class ModuloVKI:
                 noOfLams = np.min([nModes,N])
 
                 if mode == "fullSVD":
-                    print(" -> Computing eigenvectors of K_Fsc using full SVD")
-                    if taperWid[k] > 0:
+                    if taperWid[scalesToKeep[k]] > 0:
+                        print(" -> Computing eigenvectors of K_Fsc using full SVD with smoothing")
                         _, lam, eigv = svd(D_hat[:,indices]*mask1D, full_matrices=False, check_finite=False) # O(Ns*N**2)
                     else:
+                        print(" -> Computing eigenvectors of K_Fsc using full SVD")
                         _, lam, eigv = svd(D_hat[:,indices], full_matrices=False, check_finite=False) # O(Ns*N**2)
 
                     # Take only the noOfLams largest singular values and corresponding right singular vectors
@@ -723,7 +727,6 @@ class ModuloVKI:
                     eigv = eigv[:noOfLams,:]
 
                 else: # mode == "randSVD"
-                    print(" -> Computing eigenvectors of K_Fsc using randomized SVD")
                     if n_iter >= 0:
                         powIter = n_iter
                     elif n_iter == -1:
@@ -731,9 +734,11 @@ class ModuloVKI:
                     else:
                         raise ValueError("Invalid n_iter value, must be >=0 for manual setting or -1 for auto-setting.")
 
-                    if taperWid[k] > 0:
+                    if taperWid[scalesToKeep[k]] > 0:
+                        print(" -> Computing eigenvectors of K_Fsc using randomized SVD with smoothing")
                         _, lam, eigv = rsvd(D_hat[:,indices]*mask1D, t=int(noOfLams), p=powIter, oversampling=oversampling) # O(Ns*N*noOfLams)
                     else:
+                        print(" -> Computing eigenvectors of K_Fsc using randomized SVD")
                         _, lam, eigv = rsvd(D_hat[:,indices], t=int(noOfLams), p=powIter, oversampling=oversampling) # O(Ns*N*noOfLams)
                     lam = np.diag(lam)
 
@@ -814,6 +819,7 @@ class ModuloVKI:
         #print("Done in %.3f s"%(time()-startSpat))
 
         return phi, psi, sigTot
+    
 
     def DMD(self, SAVE_T_DMD: bool = True, F_S: float = 1.0, verbose:  bool = True):
         """

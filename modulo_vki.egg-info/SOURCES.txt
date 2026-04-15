@@ -24,6 +24,9 @@ modulo_vki/core/_spod_t.py
 modulo_vki/core/spatial_structures.py
 modulo_vki/core/temporal_structures.py
 modulo_vki/core/utils.py
+modulo_vki/fortran/__init__.py
+modulo_vki/fortran/compile_fortran.py
+modulo_vki/fortran/symMatmulRoutines.f90
 modulo_vki/utils/__init__.py
 modulo_vki/utils/_plots.py
 modulo_vki/utils/_utils.py

@@ -253,7 +253,7 @@ def compute_K_F(D,fs,ncpus,useFortran):
 
     # Compute temporal correlation matrix K
     if useFortran:
-        import symMatmulRoutines as sm      # Import Fortran routines only when needed
+        import modulo_vki.fortran.symMatmulRoutines as sm     # Import Fortran routines only when needed
         K = sm.sym_routines.compute_ata(np.asfortranarray(D),D.shape[0],Nt)
     else:
         K = np.linalg.matmul(D.T, D)

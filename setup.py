@@ -1,8 +1,7 @@
-import os
 from os import path
 from setuptools import setup, find_packages
 import sys
-#from numpy.distutils.core import Extension
+
 
 # NOTE: This file must remain Python 2 compatible for the foreseeable future,
 # to ensure that we error out properly for people with outdated setuptools
@@ -51,7 +50,8 @@ setup(
             # When adding files here, remember to update MANIFEST.in as well,
             # or else they will not be included in the distribution on PyPI!
             # 'path/to/data_file',
-        ]
+        ],
+        "modulo_vki.fortran": ["symMatmulRoutines.f90"],
     },
     install_requires=[
         "tqdm",

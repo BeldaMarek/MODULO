@@ -523,8 +523,8 @@ def sortScalesByEnergy(F_V, Keep, freq, mode, sourceMat):
     indTot : list of 1D np.ndarray of int >0
         List of arrays containing indices corresponding to appropriate scales. Scales in unsorted order.
 
-    noOfKept : int >=0
-        Number of kept scales.
+    scalesToKeep : 1D np.ndarray of int
+        Indices of scales to keep.
 
     Raises
     ------
@@ -573,7 +573,7 @@ def sortScalesByEnergy(F_V, Keep, freq, mode, sourceMat):
     scaleOrder = np.flip(np.argsort(E))
 
 
-    return scaleOrder, E, f, indTot, noOfKept
+    return scaleOrder, E, f, indTot, scalesToKeep
 
 
 def taperBlockBounds(indices, winType, taperSize, Nt, fBounds, fs):
