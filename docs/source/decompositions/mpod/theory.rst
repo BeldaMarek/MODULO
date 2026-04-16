@@ -33,3 +33,8 @@ where :math:`\mathbf{P}_\mathbf{\Sigma}` is a permutation matrix that ranks the 
 
 In conclusion, we note that the mPOD generalizes POD and DFT: for :math:`M=1`, the mPOD is equivalent to POD, while for :math:`M=n_t`, 
 the mPOD is equivalent to DFT.
+
+fast mPOD
+^^^^^^^^^
+
+The fast mPOD changes the workflow of classical mPOD by performing the analysis in frequency domain and replacing filters with compact-support masks. This allows to reduce the computational cost of the mPOD by orders of magnitude, while preserving the key properties of the decomposition. Since it uses spectral masks instead of filter bank, it sacrifices the advanced boundary treatment of the classical mPOD to gain the aforementioned computational benefits.

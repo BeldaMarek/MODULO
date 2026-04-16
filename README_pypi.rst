@@ -27,7 +27,7 @@ MODULO currently features the following decompositions:
 
 - Discrete Fourier Transform (DFT) (`Briggs et al. (1997) <https://epubs.siam.org/doi/book/10.1137/1.9781611971514>`_)
 - Proper Orthogonal Decomposition (POD) (`Sirovich et al. (1987) <https://www.ams.org/journals/qam/1987-45-03/S0033-569X-1987-0910464-1/S0033-569X-1987-0910464-1.pdf>`_ , `Berkooz et al. (1993) <https://doi.org/10.1146/annurev.fl.25.010193.002543>`_)
-- Multi-Scale Proper Orthogonal Decomposition (mPOD) (`Mendez et al. (2019) <https://arxiv.org/abs/1804.09646>`_)
+- Multi-Scale Proper Orthogonal Decomposition (mPOD) (`Mendez et al. (2019) <https://arxiv.org/abs/1804.09646>`_) and its fast spectral variant (`Belda et al. (2026) <https://arxiv.org/abs/2604.12077>`_)
 - Dynamic Mode Decomposition (DMD) (`Schmid (2010) <https://doi.org/10.1017/S0022112010001217>`_)
 - Spectral Proper Orthogonal Decomposition (SPOD) (`Sieber et al. (2016) <https://doi.org/10.48550/arXiv.1508.04642>`_, `Towne et al. (2018) <https://doi.org/10.48550/arXiv.1708.04393>`_), 
   note that the two are different formulations, and both are available in MODULO.
@@ -40,18 +40,11 @@ Release Notes
 -------------
 This version of MODULO includes the following updates:
 
-1. **mPOD bug fix:** the previous version of mPOD was skipping the last scale of the frequency splitting vector. Fixed in this version.
+1. **fast mPOD formulation:** fast mPOD implementation for large datasets is now available. Does all processing efficiently in the frequency domain. For very large datasets includes Fortran support for correlation matrix assembly.
 
-2. **SPOD parallelisation:** CSD - SPOD can now be parallelized, leveraging `joblib`. The user needs just to pass the argument `n_processes` for the computation to be
-   split between different workers.
+2. **vtk support:** for both uniform and nonuniform grids, Modulo now supports reading and writing of vtk and vtu files. A utility to get cell volumes is also included.
    
-3. **Simplified decomposition interface:** the interface of the decomposition methods has been simplified to improve user experience. 
-
-4. **Enhanced POD selection:** the POD function has been redesigned, allowing users to easily choose between different POD methods.  
-   
-5. **Improved computational efficiency:** the code of the decomposition functions has been optimised, resulting in reduced computation time. mPOD now includes two additional optional arguments to enable faster filtering and to avoid recomputing the Sigmas after QR polishing. 
-	
-6. **Extended documentation:** the documentation has been significantly enriched, now including theoretical foundations for all the supported modal decomposition techniques. 
+3. **new tutorial:** a tutorial for fast mPOD method illustrating the basic use of the method is included. 
 
 	
 Documentation
@@ -93,6 +86,14 @@ or, if you have pip installed in your environment,
 
     $ pip install .
 
+Compilation of fortran support for fast mPOD
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The fast mPOD implementation includes fortran support for the correlation matrix assembly. Fortran modules can be compiled (after successfully installing modulo) by running the following command:
+
+.. code-block:: bash
+
+    $ python3 -m modulo_vki.fortran.compile_fortran
 
 Example 
 -------------
@@ -296,6 +297,7 @@ References
 - Berkooz, Gal, Philip Holmes, and John L. Lumley. "The proper orthogonal decomposition in the analysis of turbulent flows." Annual review of fluid mechanics 25.1 (1993): 539-575.
 - Sirovich, Lawrence. "Turbulence and the dynamics of coherent structures. III. Dynamics and scaling." Quarterly of Applied mathematics 45.3 (1987): 583-590.
 - Mendez, M. A., M. Balabane, and J-M. Buchlin. "Multi-scale proper orthogonal decomposition of complex fluid flows." Journal of Fluid Mechanics 870 (2019): 988-1036.
+- Belda, M., L. Schena, R. Poletti, M. Isoz, T. Hyhlík, and M. A. Mendez. "A Fast spectral formulation of the multiscale proper orthogonal decomposition." arXiv preprint arXiv:2604.12077 (2026).
 - Schmid, Peter J. "Dynamic mode decomposition of numerical and experimental data." Journal of fluid mechanics 656 (2010): 5-28.
 - Sieber, Moritz, C. Oliver Paschereit, and Kilian Oberleithner. "Spectral proper orthogonal decomposition." Journal of Fluid Mechanics 792 (2016): 798-828.
 - Towne, Aaron, Oliver T. Schmidt, and Tim Colonius. "Spectral proper orthogonal decomposition and its relationship to dynamic mode decomposition and resolvent analysis." Journal of Fluid Mechanics 847 (2018): 821-867.
